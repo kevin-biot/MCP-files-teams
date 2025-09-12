@@ -9,3 +9,4 @@ patchesStrategicMerge:
   - oauth2-proxy-scale-0.yaml
   - networkpolicy-allow-router.yaml
   - statefulset-probes-dev.yaml
+  - startup-probe.yaml
