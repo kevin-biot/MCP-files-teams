@@ -9,15 +9,31 @@ spec:
       type: string
       default: deploy/overlays/dev
   tasks:
-    - name: kustomize-build
+    - name: validate-kustomize-and-schemas
       taskSpec:
+        description: Kustomize build and schema validation via kubeconform
+        params:
+          - name: overlay
+            type: string
+            default: $(params.overlay)
         steps:
-          - name: build
+          - name: kustomize-build
             image: registry.access.redhat.com/ubi9/ubi:latest
             script: |
               #!/usr/bin/env bash
               set -euo pipefail
               dnf -y install git curl tar >/dev/null 2>&1 || true
               curl -sSL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz | tar -xz -C /usr/local/bin kustomize
-              kustomize build $(params.overlay) >/dev/null
+              kustomize version || true
+              echo "Building $(params.overlay)"
+              kustomize build $(params.overlay) > /workspace/manifests.yaml
+          - name: kubeconform-validate
+            image: registry.access.redhat.com/ubi9/ubi:latest
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+              dnf -y install curl >/dev/null 2>&1 || true
+              curl -sSL https://github.com/yannh/kubeconform/releases/download/v0.6.7/kubeconform-linux-amd64.tar.gz | tar -xz -C /usr/local/bin kubeconform
+              echo "Running kubeconform (ignore missing CRD schemas)"
+              kubeconform -ignore-missing-schemas -strict -summary /workspace/manifests.yaml
               echo "Validated $(params.overlay)"
