@@ -1,13 +1,12 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: chroma
+  name: mcp-auth
 spec:
   to:
     kind: Service
-    name: oauth2-proxy
+    name: oauth2-proxy-mcp
   port:
     targetPort: http
   tls:
     termination: edge
-  # host is patched per overlay

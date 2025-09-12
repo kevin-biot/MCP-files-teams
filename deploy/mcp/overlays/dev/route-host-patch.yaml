@@ -1,0 +1,6 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mcp
+spec:
+  host: mcp.apps-crc.testing

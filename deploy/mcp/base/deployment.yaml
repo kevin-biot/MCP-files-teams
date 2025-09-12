@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-server
+  labels:
+    app: mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      containers:
+        - name: mcp
+          image: mcp-files-teams:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MCP_MEMORY_DIR
+              value: "/mcp-memory"
+            - name: MCP_DISABLE_JSON
+              value: "0"
+            - name: MCP_TEAM_ID
+              value: "default-team"
+            - name: CHROMA_URL
+              value: "http://chroma-svc:8000"
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: memory
+              mountPath: /mcp-memory
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 6
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            failureThreshold: 6
+      volumes:
+        - name: memory
+          persistentVolumeClaim:
+            claimName: mcp-memory

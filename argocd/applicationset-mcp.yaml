@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: mcp-files-teams
+  name: mcp-files-teams-mcp
 spec:
   generators:
     - list:
@@ -14,13 +14,13 @@ spec:
             namespace: team-memory
   template:
     metadata:
-      name: chroma-{{env}}
+      name: mcp-{{env}}
     spec:
       project: default
       source:
         repoURL: https://github.com/kevin-biot/MCP-files-teams.git
         targetRevision: main
-        path: deploy/overlays/{{env}}
+        path: deploy/mcp/overlays/{{env}}
       destination:
         server: https://kubernetes.default.svc
         namespace: "{{namespace}}"

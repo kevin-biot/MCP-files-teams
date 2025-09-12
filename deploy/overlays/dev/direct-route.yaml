@@ -1,13 +1,13 @@
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: chroma
+  name: chroma-direct
 spec:
+  host: chroma-dev.apps-crc.testing
   to:
     kind: Service
-    name: oauth2-proxy
+    name: chroma-svc
   port:
-    targetPort: http
+    targetPort: proxy
   tls:
     termination: edge
-  # host is patched per overlay

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: chroma
 spec:
-  serviceName: chroma
+  serviceName: chroma-svc
   replicas: 1
   selector:
     matchLabels:
@@ -17,34 +17,43 @@ spec:
     spec:
       containers:
         - name: chroma
-          image: chromadb/chroma:latest
+          image: chromadb/chroma:0.5.4
           imagePullPolicy: IfNotPresent
           env:
             - name: ANONYMIZED_TELEMETRY
               value: "False"
-            - name: CHROMA_SERVER_HOST
-              value: "0.0.0.0"
-            - name: CHROMA_SERVER_HTTP_PORT
-              value: "8000"
           ports:
             - containerPort: 8000
               name: http
           volumeMounts:
             - name: data
-              mountPath: /chroma/chroma
+              mountPath: /data
           readinessProbe:
-            httpGet:
-              path: /api/v1/heartbeat
-              port: 8000
-            initialDelaySeconds: 10
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 20
             periodSeconds: 10
+            failureThreshold: 6
           livenessProbe:
-            httpGet:
-              path: /api/v1/heartbeat
-              port: 8000
-            initialDelaySeconds: 30
+            tcpSocket:
+              port: 8081
+            initialDelaySeconds: 40
             periodSeconds: 20
+            failureThreshold: 6
+        - name: nginx-proxy
+          image: nginx:1.25-alpine
+          ports:
+            - containerPort: 8081
+              name: proxy
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d
+          command: ["/bin/sh","-c"]
+          args: ["nginx -g 'daemon off;' "]
       volumes:
         - name: data
           persistentVolumeClaim:
             claimName: chroma-data
+        - name: nginx-conf
+          configMap:
+            name: chroma-nginx-proxy
