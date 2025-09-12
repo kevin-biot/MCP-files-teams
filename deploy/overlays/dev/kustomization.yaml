@@ -10,3 +10,4 @@ patchesStrategicMerge:
   - networkpolicy-allow-router.yaml
   - statefulset-probes-dev.yaml
   - startup-probe.yaml
+  - resources-dev.yaml
