@@ -115,14 +115,26 @@ export class ChromaMemoryManager {
       await this.initialize();
     }
     
-    // Optionally skip JSON backup if disabled
+    // Resolve user/team/visibility
+    const userId = process.env.MCP_USER_ID || memory.userId || 'unknown-user';
+    const teamId = process.env.MCP_TEAM_ID || memory.teamId || 'default-team';
+    const visibility = memory.visibility || 'team';
+
     const disableJson = (process.env.MCP_DISABLE_JSON || '').toLowerCase() === 'true' || process.env.MCP_DISABLE_JSON === '1';
+    const jsonOnlyPrivate = (process.env.MCP_PRIVATE_JSON_ONLY || '1') === '1';
+
+    // JSON backup unless disabled
     if (!disableJson) {
-      await this.storeConversationToJson(memory);
+      await this.storeConversationToJson({ ...memory, userId, teamId, visibility });
     }
-    
+
+    // For private memories, optionally skip Chroma vector storage
+    if (visibility === 'private' && jsonOnlyPrivate) {
+      return true;
+    }
+
     if (!this.client || !this.collection) {
-      return true; // JSON storage succeeded
+      return true; // JSON storage (if enabled) succeeded
     }
 
     try {
@@ -146,9 +158,9 @@ export class ChromaMemoryManager {
           assistantResponse: memory.assistantResponse,
           context: memory.context.join(', '),
           tags: memory.tags.join(', '),
-          userId: process.env.MCP_USER_ID || memory.userId || 'unknown-user',
-          teamId: process.env.MCP_TEAM_ID || memory.teamId || 'default-team',
-          visibility: memory.visibility || 'team',
+          userId,
+          teamId,
+          visibility,
           projectId: memory.projectId || process.env.MCP_PROJECT_ID || undefined,
           domain: memory.domain || undefined
         }]
@@ -164,7 +176,11 @@ export class ChromaMemoryManager {
 
   async storeConversationToJson(memory: ConversationMemory): Promise<boolean> {
     try {
-      const sessionFile = path.join(this.memoryDir, `${memory.sessionId}.json`);
+      // Store under per-user directory
+      const userSafe = (memory.userId || process.env.MCP_USER_ID || 'unknown-user').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const userDir = path.join(this.memoryDir, userSafe);
+      await fs.mkdir(userDir, { recursive: true });
+      const sessionFile = path.join(userDir, `${memory.sessionId}.json`);
       
       let existingData: ConversationMemory[] = [];
       try {
@@ -241,17 +257,19 @@ export class ChromaMemoryManager {
     try {
       const results: MemorySearchResult[] = [];
       const queryLower = query.toLowerCase();
-      
-      // Read all session files or specific session
+      const userId = process.env.MCP_USER_ID || 'unknown-user';
+      const userDir = path.join(this.memoryDir, userId);
+      try { await fs.access(userDir); } catch { return []; }
+      // Read all session files or specific session for current user
       const files = sessionId 
         ? [`${sessionId}.json`]
-        : await fs.readdir(this.memoryDir);
+        : await fs.readdir(userDir);
       
       for (const file of files) {
         if (!file.endsWith('.json')) continue;
         
         try {
-          const filePath = path.join(this.memoryDir, file);
+          const filePath = path.join(userDir, file);
           const content = await fs.readFile(filePath, 'utf8');
           const memories: ConversationMemory[] = JSON.parse(content);
           
@@ -286,7 +304,9 @@ export class ChromaMemoryManager {
 
   async listSessions(): Promise<string[]> {
     try {
-      const files = await fs.readdir(this.memoryDir);
+      const userId = process.env.MCP_USER_ID || 'unknown-user';
+      const userDir = path.join(this.memoryDir, userId);
+      const files = await fs.readdir(userDir);
       return files
         .filter(file => file.endsWith('.json'))
         .map(file => file.replace('.json', ''));
@@ -383,17 +403,24 @@ export class ChromaMemoryManager {
     }
 
     try {
-      const sessionFiles = await fs.readdir(this.memoryDir);
+      const sessionFiles: string[] = [];
+      const users = await fs.readdir(this.memoryDir).catch(() => []);
+      for (const user of users) {
+        const userPath = path.join(this.memoryDir, user);
+        const stat = await fs.stat(userPath).catch(() => null);
+        if (!stat || !stat.isDirectory()) continue;
+        const files = await fs.readdir(userPath).catch(() => []);
+        for (const f of files) {
+          if (f.endsWith('.json')) sessionFiles.push(path.join(userPath, f));
+        }
+      }
       let loaded = 0;
       let errors = 0;
       
       console.log(`🔄 Starting bulk reload of ${sessionFiles.length} session files into ChromaDB...`);
       
-      for (const file of sessionFiles) {
-        if (!file.endsWith('.json')) continue;
-        
+      for (const filePath of sessionFiles) {
         try {
-          const filePath = path.join(this.memoryDir, file);
           const content = await fs.readFile(filePath, 'utf8');
           const memories: ConversationMemory[] = JSON.parse(content);
           
@@ -417,9 +444,9 @@ export class ChromaMemoryManager {
             loaded++;
           }
           
-          console.log(`✓ Loaded ${memories.length} memories from ${file}`);
+          console.log(`✓ Loaded ${memories.length} memories from ${path.basename(filePath)}`);
         } catch (error) {
-          console.error(`✗ Failed to load ${file}:`, error);
+          console.error(`✗ Failed to load ${path.basename(filePath)}:`, error);
           errors++;
         }
       }
