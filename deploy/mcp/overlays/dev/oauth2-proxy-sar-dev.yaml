@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy-mcp
+spec:
+  template:
+    spec:
+      containers:
+        - name: oauth2-proxy
+          args:
+            - "--openshift-sar={\"namespace\":\"team-memory-dev\",\"resource\":\"pods\",\"verb\":\"get\"}"
