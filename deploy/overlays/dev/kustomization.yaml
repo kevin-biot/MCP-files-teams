@@ -8,3 +8,4 @@ patchesStrategicMerge:
   - oauth2-proxy-scale-0.yaml
   - networkpolicy-allow-router.yaml
   - direct-route.yaml
+  - statefulset-probes-dev.yaml
