@@ -2,10 +2,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - ../../base
+  - direct-route.yaml
 patchesStrategicMerge:
   - route-host-patch.yaml
   - pvc-size-patch.yaml
   - oauth2-proxy-scale-0.yaml
   - networkpolicy-allow-router.yaml
-  - direct-route.yaml
   - statefulset-probes-dev.yaml

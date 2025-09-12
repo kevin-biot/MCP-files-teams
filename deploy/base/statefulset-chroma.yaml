@@ -22,7 +22,8 @@ spec:
           env:
             - name: ANONYMIZED_TELEMETRY
               value: "False"
-          # Default entrypoint binds to 127.0.0.1:8000
+          command: ["/bin/sh","-c"]
+          args: ["exec chroma run --host 127.0.0.1 --port 8000 --path /data"]
           ports:
             - containerPort: 8000
               name: http
