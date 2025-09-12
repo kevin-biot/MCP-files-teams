@@ -47,6 +47,16 @@ export const memoryTools: Array<{
           type: "boolean",
           description: "Automatically extract tags and context from messages",
           default: true
+        },
+        visibility: {
+          type: "string",
+          description: "Visibility: private | team | public",
+          default: "team"
+        },
+        target: {
+          type: "string",
+          description: "Where to store: local | team | both",
+          default: "both"
         }
       },
       required: ["sessionId", "userMessage", "assistantResponse"]

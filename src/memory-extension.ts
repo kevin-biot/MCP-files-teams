@@ -19,6 +19,11 @@ export interface ConversationMemory {
   context: string[];
   tags: string[];
   source?: KnowledgeSourceClass;
+  userId?: string;
+  teamId?: string;
+  visibility?: 'private' | 'team' | 'public';
+  projectId?: string;
+  domain?: string;
 }
 
 export interface MemorySearchResult {
@@ -36,14 +41,17 @@ export class ChromaMemoryManager {
   constructor(memoryDir: string) {
     this.memoryDir = memoryDir;
     
+    // Env-configurable Chroma client
+    const url = process.env.CHROMA_URL?.trim();
+    const host = process.env.CHROMA_HOST?.trim() || (url ? undefined : "127.0.0.1");
+    const port = process.env.CHROMA_PORT ? parseInt(process.env.CHROMA_PORT, 10) : (url ? undefined : 8000);
     try {
-      // Connect to ChromaDB HTTP server with embedding function
-      this.client = new ChromaClient({
-        host: "127.0.0.1",
-        port: 8000
-      });
-      
-      console.log("✓ ChromaDB client initialized");
+      if (url) {
+        this.client = new ChromaClient({ url });
+      } else {
+        this.client = new ChromaClient({ host: host!, port: port! });
+      }
+      console.log(`✓ ChromaDB client initialized (${url ? url : host+":"+port})`);
     } catch (error) {
       console.error('ChromaDB initialization failed, will use JSON-only mode:', error);
       this.client = null;
@@ -134,7 +142,12 @@ export class ChromaMemoryManager {
           userMessage: memory.userMessage,
           assistantResponse: memory.assistantResponse,
           context: memory.context.join(', '),
-          tags: memory.tags.join(', ')
+          tags: memory.tags.join(', '),
+          userId: process.env.MCP_USER_ID || memory.userId || 'unknown-user',
+          teamId: process.env.MCP_TEAM_ID || memory.teamId || 'default-team',
+          visibility: memory.visibility || 'team',
+          projectId: memory.projectId || process.env.MCP_PROJECT_ID || undefined,
+          domain: memory.domain || undefined
         }]
       });
       
@@ -175,10 +188,17 @@ export class ChromaMemoryManager {
     if (this.collection && this.client) {
       try {
         console.log('📊 Attempting ChromaDB vector search...');
+        const where: Record<string, any> = {};
+        const userId = process.env.MCP_USER_ID;
+        const teamId = process.env.MCP_TEAM_ID;
+        if (sessionId) where.sessionId = sessionId;
+        if (teamId) where.teamId = teamId;
+        // By default, show team/public content; user's private remains local JSON
+        where.visibility = { "$in": ["team", "public"] };
         const results = await this.collection.query({
           queryTexts: [query],
           nResults: limit,
-          where: sessionId ? { sessionId } : undefined
+          where
         });
 
         console.log('✅ ChromaDB search successful:', {
