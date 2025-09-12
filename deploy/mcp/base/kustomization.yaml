@@ -5,4 +5,7 @@ resources:
   - deployment.yaml
   - service.yaml
   - route.yaml
+  - route-auth.yaml
   - networkpolicy.yaml
+  - oauth2-proxy-deployment.yaml
+  - oauth2-proxy-service.yaml
