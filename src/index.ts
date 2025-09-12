@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js";
 import express from 'express';
+import { RequestContext } from './lib/request-context.js';
 import fs from "fs/promises";
 import path from "path";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -567,6 +568,10 @@ async function runServer() {
     // Handle MCP requests
     app.all('/mcp', async (req, res) => {
       try {
+        const hdrUser = (req.headers['x-auth-request-user'] as string) || (req.headers['x-forwarded-preferred-username'] as string) || null;
+        // Simple team resolution: prefer env if set, else header group (customize as needed)
+        const hdrTeam = (req.headers['x-auth-request-groups'] as string) || process.env.MCP_TEAM_ID || null;
+        RequestContext.set(hdrUser, hdrTeam);
         const sessionId = req.headers['mcp-session-id'] as string || 'default';
         
         if (!transports.has(sessionId)) {
@@ -579,8 +584,10 @@ async function runServer() {
         
         const transport = transports.get(sessionId)!;
         await transport.handleRequest(req, res, req.body);
+        RequestContext.clear();
       } catch (error) {
         console.error('Error handling MCP request:', error);
+        RequestContext.clear();
         res.status(500).json({ error: 'Internal server error' });
       }
     });

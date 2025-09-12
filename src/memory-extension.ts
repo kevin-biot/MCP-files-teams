@@ -2,6 +2,7 @@ import { ChromaClient } from 'chromadb';
 import { DefaultEmbeddingFunction } from '@chroma-core/default-embed';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { RequestContext } from './lib/request-context.js';
 
 export enum KnowledgeSourceClass {
   USER_PROVIDED = 'user_provided',
@@ -116,8 +117,10 @@ export class ChromaMemoryManager {
     }
     
     // Resolve user/team/visibility
-    const userId = process.env.MCP_USER_ID || memory.userId || 'unknown-user';
-    const teamId = process.env.MCP_TEAM_ID || memory.teamId || 'default-team';
+    const rcUser = RequestContext.userId();
+    const rcTeam = RequestContext.teamId();
+    const userId = rcUser || process.env.MCP_USER_ID || memory.userId || 'unknown-user';
+    const teamId = rcTeam || process.env.MCP_TEAM_ID || memory.teamId || 'default-team';
     const visibility = memory.visibility || 'team';
 
     const disableJson = (process.env.MCP_DISABLE_JSON || '').toLowerCase() === 'true' || process.env.MCP_DISABLE_JSON === '1';
@@ -177,7 +180,8 @@ export class ChromaMemoryManager {
   async storeConversationToJson(memory: ConversationMemory): Promise<boolean> {
     try {
       // Store under per-user directory
-      const userSafe = (memory.userId || process.env.MCP_USER_ID || 'unknown-user').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const rcUser = RequestContext.userId();
+      const userSafe = (memory.userId || rcUser || process.env.MCP_USER_ID || 'unknown-user').replace(/[^a-zA-Z0-9._-]/g, '_');
       const userDir = path.join(this.memoryDir, userSafe);
       await fs.mkdir(userDir, { recursive: true });
       const sessionFile = path.join(userDir, `${memory.sessionId}.json`);
@@ -257,7 +261,7 @@ export class ChromaMemoryManager {
     try {
       const results: MemorySearchResult[] = [];
       const queryLower = query.toLowerCase();
-      const userId = process.env.MCP_USER_ID || 'unknown-user';
+      const userId = RequestContext.userId() || process.env.MCP_USER_ID || 'unknown-user';
       const userDir = path.join(this.memoryDir, userId);
       try { await fs.access(userDir); } catch { return []; }
       // Read all session files or specific session for current user
@@ -304,7 +308,7 @@ export class ChromaMemoryManager {
 
   async listSessions(): Promise<string[]> {
     try {
-      const userId = process.env.MCP_USER_ID || 'unknown-user';
+      const userId = RequestContext.userId() || process.env.MCP_USER_ID || 'unknown-user';
       const userDir = path.join(this.memoryDir, userId);
       const files = await fs.readdir(userDir);
       return files
