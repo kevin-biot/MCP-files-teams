@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: chroma
-          image: chromadb/chroma:latest
+          image: chromadb/chroma:0.5.4
           imagePullPolicy: IfNotPresent
           env:
             - name: ANONYMIZED_TELEMETRY
