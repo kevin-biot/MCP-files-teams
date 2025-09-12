@@ -1,0 +1,12 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: mcp-auth
+spec:
+  to:
+    kind: Service
+    name: oauth2-proxy-mcp
+  port:
+    targetPort: http
+  tls:
+    termination: edge
