@@ -21,7 +21,7 @@ spec:
           args:
             - "--provider=oidc"
             - "--http-address=0.0.0.0:4180"
-            - "--upstream=http://chroma:8000"
+            - "--upstream=http://chroma-svc:8000"
             - "--cookie-secure=true"
             - "--cookie-samesite=lax"
             - "--email-domain=*"

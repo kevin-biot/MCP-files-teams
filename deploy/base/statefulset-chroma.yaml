@@ -5,7 +5,7 @@ metadata:
   labels:
     app: chroma
 spec:
-  serviceName: chroma
+  serviceName: chroma-svc
   replicas: 1
   selector:
     matchLabels:
