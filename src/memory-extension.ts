@@ -115,8 +115,11 @@ export class ChromaMemoryManager {
       await this.initialize();
     }
     
-    // Always store to JSON as backup
-    await this.storeConversationToJson(memory);
+    // Optionally skip JSON backup if disabled
+    const disableJson = (process.env.MCP_DISABLE_JSON || '').toLowerCase() === 'true' || process.env.MCP_DISABLE_JSON === '1';
+    if (!disableJson) {
+      await this.storeConversationToJson(memory);
+    }
     
     if (!this.client || !this.collection) {
       return true; // JSON storage succeeded

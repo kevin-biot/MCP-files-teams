@@ -2,6 +2,7 @@
 // Add these to your existing index.ts file
 
 import { ChromaMemoryManager, extractTags, extractContext } from './memory-extension.js';
+import { expandHome } from './utils/path-utils.js';
 import type { ToolSchema } from "@modelcontextprotocol/sdk/types.js";
 import path from 'path';
 
@@ -10,7 +11,8 @@ let memoryManager: ChromaMemoryManager | null = null;
 
 // Function to initialize memory manager
 export async function initializeMemoryManager(allowedDirectories: string[]) {
-  const memoryDir = path.join(allowedDirectories[0], '.mcp-memory');
+  const envDir = process.env.MCP_MEMORY_DIR ? expandHome(process.env.MCP_MEMORY_DIR) : null;
+  const memoryDir = envDir || path.join(allowedDirectories[0], '.mcp-memory');
   memoryManager = new ChromaMemoryManager(memoryDir);
   // Force initialization immediately to see any errors
   await memoryManager.initialize();
