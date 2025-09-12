@@ -1,0 +1,32 @@
+{
+  "name": "MCP-files-teams",
+  "version": "0.1.0",
+  "description": "Team-ready MCP server with ChromaDB integration (OpenShift + GitOps)",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": { "mcp-files-teams": "dist/index.js" },
+  "scripts": {
+    "build": "tsc && chmod +x dist/*.js && chmod +x scripts/*.sh",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "start:http": "./scripts/start-http.sh",
+    "start:stdio": "./scripts/start-stdio.sh",
+    "test": "jest",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@chroma-core/default-embed": "^0.1.8",
+    "@modelcontextprotocol/sdk": "^1.12.3",
+    "chromadb": "^3.0.10",
+    "diff": "^5.1.0",
+    "express": "^4.18.0",
+    "glob": "^10.3.10",
+    "minimatch": "^10.0.1",
+    "zod": "^3.22.0",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.8.3"
+  }
+}
