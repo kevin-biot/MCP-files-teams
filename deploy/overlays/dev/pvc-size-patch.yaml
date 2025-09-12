@@ -3,6 +3,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: chroma-data
 spec:
+  storageClassName: crc-csi-hostpath-provisioner
   resources:
     requests:
       storage: 50Gi
