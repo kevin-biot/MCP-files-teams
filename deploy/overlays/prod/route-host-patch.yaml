@@ -1,0 +1,6 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: chroma
+spec:
+  host: chroma.apps.example.openshift.local

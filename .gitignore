@@ -1,0 +1,8 @@
+# General
+.DS_Store
+
+# Node/npm if you add tooling
+node_modules/
+
+# Kustomize build outputs
+*.orig

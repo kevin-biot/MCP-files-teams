@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  labels:
+    app: oauth2-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--provider=oidc"
+            - "--http-address=0.0.0.0:4180"
+            - "--upstream=http://chroma:8000"
+            - "--cookie-secure=true"
+            - "--cookie-samesite=lax"
+            - "--email-domain=*"
+            - "--pass-authorization-header=true"
+            - "--set-authorization-header=true"
+            - "--skip-provider-button=true"
+            - "--oidc-issuer-url=$(OIDC_ISSUER_URL)"
+            - "--client-id=$(OAUTH2_PROXY_CLIENT_ID)"
+            - "--client-secret=$(OAUTH2_PROXY_CLIENT_SECRET)"
+            - "--cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)"
+          env:
+            - name: OIDC_ISSUER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-secret
+                  key: oidc_issuer_url
+            - name: OAUTH2_PROXY_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-secret
+                  key: client_id
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-secret
+                  key: client_secret
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: oauth2-proxy-secret
+                  key: cookie_secret
+          ports:
+            - name: http
+              containerPort: 4180

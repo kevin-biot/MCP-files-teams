@@ -1,0 +1,13 @@
+apiversion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: chroma
+spec:
+  to:
+    kind: Service
+    name: oauth2-proxy
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+  # host is patched per overlay
