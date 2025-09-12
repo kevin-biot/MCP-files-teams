@@ -22,9 +22,9 @@ spec:
           env:
             - name: ANONYMIZED_TELEMETRY
               value: "False"
-            - name: CHROMA_SERVER_HOST
+            - name: CHROMA_HOST
               value: "0.0.0.0"
-            - name: CHROMA_SERVER_HTTP_PORT
+            - name: CHROMA_PORT
               value: "8000"
           ports:
             - containerPort: 8000
