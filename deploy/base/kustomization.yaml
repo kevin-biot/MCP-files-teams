@@ -4,6 +4,7 @@ resources:
   - pvc.yaml
   - service.yaml
   - statefulset-chroma.yaml
+  - nginx-proxy-configmap.yaml
   - oauth2-proxy-deployment.yaml
   - oauth2-proxy-service.yaml
   - route.yaml
