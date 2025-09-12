@@ -5,3 +5,6 @@ resources:
 patchesStrategicMerge:
   - route-host-patch.yaml
   - pvc-size-patch.yaml
+  - oauth2-proxy-scale-0.yaml
+  - networkpolicy-allow-router.yaml
+  - direct-route.yaml

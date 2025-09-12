@@ -1,0 +1,13 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: chroma-direct
+spec:
+  host: chroma-dev.apps.example.openshift.local
+  to:
+    kind: Service
+    name: chroma-svc
+  port:
+    targetPort: http
+  tls:
+    termination: edge
