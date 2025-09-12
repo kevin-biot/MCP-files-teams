@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: mcp
-          image: ghcr.io/kevin-biot/mcp-files-teams:dev
+          image: mcp-files-teams:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: MCP_MEMORY_DIR
