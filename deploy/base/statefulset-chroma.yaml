@@ -23,7 +23,7 @@ spec:
             - name: ANONYMIZED_TELEMETRY
               value: "False"
             - name: CHROMA_SERVER_CORS_ALLOW_ORIGINS
-              value: "*"
+              value: "[\"*\"]"
           ports:
             - containerPort: 8000
               name: http
