@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chroma-log-config
+data:
+  log_config.yml: |
+    version: 1
+    formatters:
+      default:
+        format: "%(levelname)s %(asctime)s %(name)s: %(message)s"
+    handlers:
+      default:
+        class: logging.StreamHandler
+        formatter: default
+        stream: ext://sys.stdout
+    loggers:
+      uvicorn:
+        handlers: [default]
+        level: INFO
+        propagate: False
+      uvicorn.error:
+        handlers: [default]
+        level: INFO
+        propagate: False
+      uvicorn.access:
+        handlers: [default]
+        level: INFO
+        propagate: False
