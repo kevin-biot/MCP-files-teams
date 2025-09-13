@@ -7,6 +7,5 @@ spec:
     spec:
       containers:
         - name: chroma
-          command: ["chroma"]
-          args: ["run","--host","0.0.0.0","--port","8000"]
-
+          command: ["python"]
+          args: ["-m","chromadb.cli.cli","run","--host","0.0.0.0","--port","8000"]
