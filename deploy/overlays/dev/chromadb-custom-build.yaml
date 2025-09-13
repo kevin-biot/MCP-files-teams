@@ -13,7 +13,7 @@ spec:
     dockerfile: |
       FROM python:3.11-slim
       ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DEFAULT_TIMEOUT=120
-      RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=5 chromadb==0.5.23 uvicorn
+      RUN python -m pip install --no-cache-dir --default-timeout=120 --retries=5 chromadb==1.1.0 uvicorn
       EXPOSE 8000
       CMD ["python","-m","chromadb.cli.cli","run","--host","0.0.0.0","--port","8000"]
   strategy:
