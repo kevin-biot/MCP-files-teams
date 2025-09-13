@@ -1,0 +1,35 @@
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: chromadb-custom
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  name: chromadb-custom
+spec:
+  source:
+    type: Dockerfile
+    dockerfile: |
+      FROM python:3.11-slim
+      ENV PYTHONDONTWRITEBYTECODE=1 \\
+          PYTHONUNBUFFERED=1
+      RUN pip install --no-cache-dir chromadb==0.5.23 uvicorn
+      EXPOSE 8000
+      HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \\
+        CMD python - <<'PY' || exit 1
+import urllib.request, sys
+try:
+    with urllib.request.urlopen('http://localhost:8000/api/v2/heartbeat', timeout=5) as r:
+        sys.exit(0 if r.status == 200 else 1)
+except Exception:
+    sys.exit(1)
+PY
+      CMD ["python","-m","chromadb.cli.cli","run","--host","0.0.0.0","--port","8000"]
+  strategy:
+    type: Docker
+    dockerStrategy: {}
+  output:
+    to:
+      kind: ImageStreamTag
+      name: chromadb-custom:latest

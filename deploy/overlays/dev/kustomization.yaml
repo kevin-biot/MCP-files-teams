@@ -15,7 +15,7 @@ patchesStrategicMerge:
   - pod-securitycontext.yaml
   - chroma-stdout-init.yaml
   - chroma-internal-image.yaml
-  - chroma-simple-command.yaml
+  - chromadb-custom-build.yaml
   # Removed chroma log patches; enforcing command via JSON6902 below
 patchesJson6902:
   - target:
