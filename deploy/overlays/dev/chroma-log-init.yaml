@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: chroma
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: init-chroma-log-config
+          image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+          command: ["/bin/sh","-c"]
+          args:
+            - |
+              set -e
+              mkdir -p chromadb
+              cp /config/log_config.yml chromadb/log_config.yml
+              ls -l chromadb/log_config.yml
+          volumeMounts:
+            - name: chroma-log-config
+              mountPath: /config
