@@ -4,6 +4,7 @@ resources:
   - ../../base
   - direct-route.yaml
   - networkpolicy-allow-mcp-to-chroma.yaml
+  - chroma-log-configmap.yaml
 patchesStrategicMerge:
   - route-host-patch.yaml
   - pvc-size-patch.yaml
@@ -14,7 +15,6 @@ patchesStrategicMerge:
   - resources-dev.yaml
   - pod-securitycontext.yaml
   - chroma-stdout-init.yaml
-  - chroma-log-configmap.yaml
   - chroma-log-mount.yaml
   - chroma-internal-image.yaml
   # Removed chroma log patches; enforcing command via JSON6902 below
