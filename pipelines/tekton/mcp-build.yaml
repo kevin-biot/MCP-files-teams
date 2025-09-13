@@ -4,6 +4,8 @@ metadata:
   name: mcp-build
 spec:
   description: Build MCP image from mcp-team-wt and push to OpenShift internal registry via BuildConfig binary build
+  workspaces:
+    - name: shared
   params:
     - name: infra_repo_url
       type: string
@@ -30,6 +32,8 @@ spec:
   tasks:
     - name: clone-infra
       taskSpec:
+        workspaces:
+          - name: shared
         params:
           - name: repo_url
             type: string
@@ -38,7 +42,7 @@ spec:
         steps:
           - name: git-clone
             image: alpine/git:2.36.3
-            workingDir: /workspace
+            workingDir: $(workspaces.shared.path)
             script: |
               #!/usr/bin/env sh
               set -eu
@@ -53,8 +57,13 @@ spec:
           value: $(params.infra_repo_url)
         - name: revision
           value: $(params.infra_revision)
+      workspaces:
+        - name: shared
+          workspace: shared
     - name: clone-source
       taskSpec:
+        workspaces:
+          - name: shared
         params:
           - name: repo_url
             type: string
@@ -63,7 +72,7 @@ spec:
         steps:
           - name: git-clone
             image: alpine/git:2.36.3
-            workingDir: /workspace
+            workingDir: $(workspaces.shared.path)
             script: |
               #!/usr/bin/env sh
               set -eu
@@ -73,46 +82,76 @@ spec:
           value: $(params.source_repo_url)
         - name: revision
           value: $(params.source_revision)
+      workspaces:
+        - name: shared
+          workspace: shared
     - name: prepare-context
       runAfter: [clone-infra, clone-source]
       taskSpec:
+        workspaces:
+          - name: shared
         steps:
           - name: assemble
             image: registry.access.redhat.com/ubi9/ubi:latest
-            workingDir: /workspace
+            workingDir: $(workspaces.shared.path)
             script: |
               #!/usr/bin/env bash
               set -euo pipefail
+              echo "[prepare] PWD=$(pwd)"
+              echo "[prepare] Listing workspace root"; ls -la || true
+              echo "[prepare] Listing ./source"; ls -la ./source || true
+              echo "[prepare] Listing ./infra"; ls -la ./infra || true
               mkdir -p context
-              # Copy source code into build context
-              cp -r source/* context/
+              # Copy source code into build context (handle empty dirs gracefully)
+              cp -a source/. context/
               # Overwrite Dockerfile with infra Dockerfile
               cp -f infra/$(params.dockerfile_path) context/Dockerfile
         params:
           - name: dockerfile_path
             type: string
             default: $(params.dockerfile_path)
+      workspaces:
+        - name: shared
+          workspace: shared
     - name: build-and-push
       runAfter: [prepare-context]
       taskSpec:
+        workspaces:
+          - name: shared
         params:
           - name: namespace
             type: string
           - name: image_name
             type: string
         steps:
-          - name: start-oc-binary-build
-            image: quay.io/openshift/origin-cli:4.14
-            workingDir: /workspace
+          - name: buildah-build-push
+            image: quay.io/buildah/stable:latest
+            workingDir: $(workspaces.shared.path)
+            securityContext:
+              privileged: true
+              runAsUser: 0
+            env:
+              - name: STORAGE_DRIVER
+                value: vfs
+              - name: BUILDAH_ISOLATION
+                value: chroot
+              - name: DOCKER_CONFIG
+                value: /tekton/creds/.docker
+              - name: REGISTRY_AUTH_FILE
+                value: /tekton/creds/.docker/config.json
             script: |
-              #!/usr/bin/env sh
-              set -eu
-              echo "Starting binary build to BuildConfig $(params.image_name) in namespace $(params.namespace)"
-              oc project "$(params.namespace)" >/dev/null 2>&1 || oc new-project "$(params.namespace)"
-              oc start-build "bc/$(params.image_name)" --from-dir=./context --wait --follow -n "$(params.namespace)"
+              #!/usr/bin/env bash
+              set -euo pipefail
+              IMAGE="default-route-openshift-image-registry.apps-crc.testing/$(params.namespace)/$(params.image_name):latest"
+              echo "Using image: $IMAGE"
+              buildah version || true
+              buildah bud --userns=host --storage-driver=${STORAGE_DRIVER} -f ./context/Dockerfile -t "$IMAGE" ./context
+              buildah push --tls-verify=false "$IMAGE"
       params:
         - name: namespace
           value: $(params.namespace)
         - name: image_name
           value: $(params.image_name)
-
+      workspaces:
+        - name: shared
+          workspace: shared

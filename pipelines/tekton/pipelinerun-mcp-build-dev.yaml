@@ -6,6 +6,17 @@ metadata:
 spec:
   pipelineRef:
     name: mcp-build
+  workspaces:
+    - name: shared
+      volumeClaimTemplate:
+        metadata:
+          name: mcp-build-workspace
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
   params:
     - name: infra_repo_url
       value: https://github.com/kevin-biot/MCP-files-teams.git

@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ../../base
   - direct-route.yaml
+  - chroma-log-config.yaml
 patchesStrategicMerge:
   - route-host-patch.yaml
   - pvc-size-patch.yaml
@@ -11,3 +12,13 @@ patchesStrategicMerge:
   - statefulset-probes-dev.yaml
   - startup-probe.yaml
   - resources-dev.yaml
+  - chroma-logdir-patch.yaml
+  - chroma-logconfig-mount.yaml
+  - chroma-overlay-pkg.yaml
+patchesJson6902:
+  - target:
+      group: apps
+      version: v1
+      kind: StatefulSet
+      name: chroma
+    path: chroma-command-args.jsonpatch.yaml
