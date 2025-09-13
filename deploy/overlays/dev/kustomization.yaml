@@ -22,10 +22,4 @@ patchesJson6902:
       version: v1
       kind: StatefulSet
       name: chroma
-    path: chroma-command-args.jsonpatch.yaml
-  - target:
-      group: apps
-      version: v1
-      kind: StatefulSet
-      name: chroma
     path: remove-nginx-sidecar.jsonpatch.yaml

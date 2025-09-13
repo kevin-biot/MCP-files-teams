@@ -1,0 +1,7 @@
+{
+	"auths": {
+		"default-route-openshift-image-registry.apps-crc.testing": {
+			"auth": "dXNlcjpzaGEyNTZ+blMtVUJZeElkbEdQZTAwV2wtdGhZMzRNN2x4ZDg4Mm1DNkVIU1BwU3d1WQ=="
+		}
+	}
+}

@@ -3,7 +3,7 @@ kind: Route
 metadata:
   name: chroma-direct
 spec:
-  host: chroma-dev.apps-crc.testing
+  host: chroma-direct-dev.apps-crc.testing
   to:
     kind: Service
     name: chroma-svc
