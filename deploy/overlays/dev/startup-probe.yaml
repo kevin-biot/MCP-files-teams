@@ -8,8 +8,9 @@ spec:
       containers:
         - name: chroma
           startupProbe:
-            tcpSocket:
-              port: 8081
+            httpGet:
+              path: /api/v2/heartbeat
+              port: 8000
             initialDelaySeconds: 60
             periodSeconds: 10
             failureThreshold: 30

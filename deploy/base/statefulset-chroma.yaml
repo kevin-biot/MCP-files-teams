@@ -17,11 +17,13 @@ spec:
     spec:
       containers:
         - name: chroma
-          image: chromadb/chroma:0.5.4
+          image: chromadb/chroma:1.0.0
           imagePullPolicy: IfNotPresent
           env:
             - name: ANONYMIZED_TELEMETRY
               value: "False"
+            - name: CHROMA_SERVER_CORS_ALLOW_ORIGINS
+              value: "*"
           ports:
             - containerPort: 8000
               name: http

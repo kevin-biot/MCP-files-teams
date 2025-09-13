@@ -8,14 +8,18 @@ spec:
       containers:
         - name: chroma
           readinessProbe:
-            tcpSocket:
-              port: 8081
-            initialDelaySeconds: 20
-            periodSeconds: 10
+            $patch: replace
+            httpGet:
+              path: /api/v2/heartbeat
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
             failureThreshold: 6
           livenessProbe:
-            tcpSocket:
-              port: 8081
-            initialDelaySeconds: 40
-            periodSeconds: 20
+            $patch: replace
+            httpGet:
+              path: /api/v2/heartbeat
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 10
             failureThreshold: 6

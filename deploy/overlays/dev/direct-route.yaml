@@ -8,6 +8,6 @@ spec:
     kind: Service
     name: chroma-svc
   port:
-    targetPort: proxy
+    targetPort: http
   tls:
     termination: edge

@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: chroma
+spec:
+  template:
+    spec:
+      containers:
+        - name: chroma
+          image: image-registry.openshift-image-registry.svc:5000/team-memory-dev/chroma:v2
+          imagePullPolicy: Always

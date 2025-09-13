@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: allow-only-oauth2-proxy-to-chroma
+  name: allow-mcp-to-chroma
 spec:
   podSelector:
     matchLabels:
@@ -12,10 +12,7 @@ spec:
     - from:
         - podSelector:
             matchLabels:
-              app: oauth2-proxy
-        - namespaceSelector:
-            matchLabels:
-              network.openshift.io/policy-group: ingress
+              app: mcp-server
       ports:
         - protocol: TCP
           port: 8000

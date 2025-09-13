@@ -10,4 +10,6 @@ patchesStrategicMerge:
   - pvc-storageclass-dev.yaml
   - oauth2-proxy-scale-0.yaml
   - oauth2-proxy-sar-dev.yaml
+  - mcp-init-chroma-ensure.yaml
   - image-internal-registry.yaml
+  - chroma-url-dev.yaml

@@ -1,6 +1,6 @@
 - op: replace
   path: /spec/template/spec/containers/0/command
-  value: ["/bin/sh","-c"]
+  value: ["chroma"]
 - op: replace
   path: /spec/template/spec/containers/0/args
-  value: ["uvicorn chromadb.app:app --workers 1 --host 0.0.0.0 --port 8000 --proxy-headers --log-config /etc/chroma/log_config.yml --timeout-keep-alive 30"]
+  value: ["run","--host","0.0.0.0","--port","8000"]

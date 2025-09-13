@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: chroma
+spec:
+  template:
+    spec:
+      volumes:
+        - name: nginx-cache
+          emptyDir: {}
+      containers:
+        - name: nginx-proxy
+          volumeMounts:
+            - name: nginx-cache
+              mountPath: /var/cache/nginx
+

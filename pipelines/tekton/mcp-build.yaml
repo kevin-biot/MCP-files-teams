@@ -113,40 +113,46 @@ spec:
       workspaces:
         - name: shared
           workspace: shared
-    - name: build-and-push
-      runAfter: [prepare-context]
-      taskSpec:
-        workspaces:
-          - name: shared
-        params:
-          - name: namespace
-            type: string
-          - name: image_name
-            type: string
-        steps:
-          - name: buildah-build-push
-            image: quay.io/buildah/stable:latest
-            workingDir: $(workspaces.shared.path)
-            securityContext:
-              privileged: true
-              runAsUser: 0
-            env:
-              - name: STORAGE_DRIVER
-                value: vfs
-              - name: BUILDAH_ISOLATION
-                value: chroot
-              - name: DOCKER_CONFIG
-                value: /tekton/creds/.docker
-              - name: REGISTRY_AUTH_FILE
-                value: /tekton/creds/.docker/config.json
-            script: |
-              #!/usr/bin/env bash
-              set -euo pipefail
-              IMAGE="default-route-openshift-image-registry.apps-crc.testing/$(params.namespace)/$(params.image_name):latest"
-              echo "Using image: $IMAGE"
-              buildah version || true
-              buildah bud --userns=host --storage-driver=${STORAGE_DRIVER} -f ./context/Dockerfile -t "$IMAGE" ./context
-              buildah push --tls-verify=false "$IMAGE"
+          - name: build-and-push
+            runAfter: [prepare-context]
+            taskSpec:
+              workspaces:
+                - name: shared
+              params:
+                - name: namespace
+                  type: string
+                - name: image_name
+                  type: string
+              steps:
+                - name: buildah-build-push
+                  image: quay.io/buildah/stable:latest
+                  workingDir: $(workspaces.shared.path)
+                  securityContext:
+                    privileged: true
+                    runAsUser: 0
+                  env:
+                    - name: STORAGE_DRIVER
+                      value: vfs
+                    - name: BUILDAH_ISOLATION
+                      value: chroot
+                    - name: DOCKER_CONFIG
+                      value: /tekton/creds
+                    - name: REGISTRY_AUTH_FILE
+                      value: /tekton/creds/config.json
+                  script: |
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    IMAGE="default-route-openshift-image-registry.apps-crc.testing/$(params.namespace)/$(params.image_name):latest"
+                    echo "Using image: $IMAGE"
+                    buildah version || true
+                    buildah bud --userns=host --storage-driver=${STORAGE_DRIVER} -f ./context/Dockerfile -t "$IMAGE" ./context
+                    # Try internal service first, fallback to route
+                    if buildah push --tls-verify=false "image-registry.openshift-image-registry.svc:5000/$(params.namespace)/$(params.image_name):latest"; then
+                      echo "Pushed to internal service registry"
+                    else
+                      echo "Falling back to route push"
+                      buildah push --tls-verify=false "$IMAGE"
+                    fi
       params:
         - name: namespace
           value: $(params.namespace)

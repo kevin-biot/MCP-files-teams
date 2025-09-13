@@ -5,14 +5,16 @@ metadata:
 spec:
   template:
     spec:
-      securityContext:
-        fsGroup: 0
-        fsGroupChangePolicy: OnRootMismatch
       initContainers:
-        - name: init-chroma-log-symlink
+        - name: init-chroma-stdout
           image: registry.access.redhat.com/ubi9/ubi-minimal:latest
           command: ["/bin/sh","-c"]
-          args: ["mkdir -p /chroma && ln -sf /dev/stdout /chroma/chroma.log && ls -l /chroma"]
+          args:
+            - |
+              set -e
+              mkdir -p /chroma
+              ln -sf /dev/stdout /chroma/chroma.log
+              ls -l /chroma
           volumeMounts:
             - name: chroma-logs
               mountPath: /chroma
@@ -24,3 +26,4 @@ spec:
       volumes:
         - name: chroma-logs
           emptyDir: {}
+
