@@ -9,6 +9,9 @@ spec:
         - name: chroma
           volumeMounts:
             - name: chroma-log-config
+              mountPath: /chromadb/log_config.yml
+              subPath: log_config.yml
+            - name: chroma-log-config
               mountPath: /usr/local/lib/python3.11/site-packages/chromadb/log_config.yml
               subPath: log_config.yml
             - name: chroma-log-config

@@ -13,6 +13,7 @@ spec:
             - |
               set -e
               mkdir -p /chroma
+              mkdir -p /chromadb
               ln -sf /dev/stdout /chroma/chroma.log
               ls -l /chroma
           volumeMounts:
@@ -26,4 +27,3 @@ spec:
       volumes:
         - name: chroma-logs
           emptyDir: {}
-
