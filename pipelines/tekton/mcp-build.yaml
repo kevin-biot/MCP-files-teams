@@ -1,0 +1,118 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: mcp-build
+spec:
+  description: Build MCP image from mcp-team-wt and push to OpenShift internal registry via BuildConfig binary build
+  params:
+    - name: infra_repo_url
+      type: string
+      description: Git URL for infra repo containing Dockerfile
+      default: https://github.com/kevin-biot/MCP-files-teams.git
+    - name: infra_revision
+      type: string
+      default: main
+    - name: source_repo_url
+      type: string
+      description: Git URL for MCP source repo (mcp-team-wt)
+    - name: source_revision
+      type: string
+      default: main
+    - name: namespace
+      type: string
+      default: team-memory-dev
+    - name: image_name
+      type: string
+      default: mcp-server
+    - name: dockerfile_path
+      type: string
+      default: Dockerfile
+  tasks:
+    - name: clone-infra
+      taskSpec:
+        params:
+          - name: repo_url
+            type: string
+          - name: revision
+            type: string
+        steps:
+          - name: git-clone
+            image: alpine/git:2.36.3
+            workingDir: /workspace
+            script: |
+              #!/usr/bin/env sh
+              set -eu
+              git clone --depth 1 --branch "$(params.revision)" "$(params.repo_url)" infra
+        results:
+          - name: path
+            description: Path to infra checkout
+        stepTemplate:
+          env: []
+      params:
+        - name: repo_url
+          value: $(params.infra_repo_url)
+        - name: revision
+          value: $(params.infra_revision)
+    - name: clone-source
+      taskSpec:
+        params:
+          - name: repo_url
+            type: string
+          - name: revision
+            type: string
+        steps:
+          - name: git-clone
+            image: alpine/git:2.36.3
+            workingDir: /workspace
+            script: |
+              #!/usr/bin/env sh
+              set -eu
+              git clone --depth 1 --branch "$(params.revision)" "$(params.repo_url)" source
+      params:
+        - name: repo_url
+          value: $(params.source_repo_url)
+        - name: revision
+          value: $(params.source_revision)
+    - name: prepare-context
+      runAfter: [clone-infra, clone-source]
+      taskSpec:
+        steps:
+          - name: assemble
+            image: registry.access.redhat.com/ubi9/ubi:latest
+            workingDir: /workspace
+            script: |
+              #!/usr/bin/env bash
+              set -euo pipefail
+              mkdir -p context
+              # Copy source code into build context
+              cp -r source/* context/
+              # Overwrite Dockerfile with infra Dockerfile
+              cp -f infra/$(params.dockerfile_path) context/Dockerfile
+        params:
+          - name: dockerfile_path
+            type: string
+            default: $(params.dockerfile_path)
+    - name: build-and-push
+      runAfter: [prepare-context]
+      taskSpec:
+        params:
+          - name: namespace
+            type: string
+          - name: image_name
+            type: string
+        steps:
+          - name: start-oc-binary-build
+            image: quay.io/openshift/origin-cli:4.14
+            workingDir: /workspace
+            script: |
+              #!/usr/bin/env sh
+              set -eu
+              echo "Starting binary build to BuildConfig $(params.image_name) in namespace $(params.namespace)"
+              oc project "$(params.namespace)" >/dev/null 2>&1 || oc new-project "$(params.namespace)"
+              oc start-build "bc/$(params.image_name)" --from-dir=./context --wait --follow -n "$(params.namespace)"
+      params:
+        - name: namespace
+          value: $(params.namespace)
+        - name: image_name
+          value: $(params.image_name)
+

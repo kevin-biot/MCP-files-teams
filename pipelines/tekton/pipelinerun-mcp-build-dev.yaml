@@ -1,0 +1,23 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: mcp-build-dev-
+  namespace: team-memory-dev
+spec:
+  pipelineRef:
+    name: mcp-build
+  params:
+    - name: infra_repo_url
+      value: https://github.com/kevin-biot/MCP-files-teams.git
+    - name: infra_revision
+      value: main
+    - name: source_repo_url
+      value: https://github.com/kevin-biot/MCP-files.git
+    - name: source_revision
+      value: main
+    - name: namespace
+      value: team-memory-dev
+    - name: image_name
+      value: mcp-server
+    - name: dockerfile_path
+      value: Dockerfile
