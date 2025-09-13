@@ -18,7 +18,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/kevin-biot/MCP-files-teams.git
+        repoURL: https://github.com/kevin-biot/mcp-files-teams.git
         targetRevision: main
         path: deploy/mcp/overlays/{{env}}
       destination:
