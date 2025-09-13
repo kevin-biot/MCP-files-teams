@@ -7,5 +7,5 @@ spec:
     spec:
       containers:
         - name: chroma
-          image: image-registry.openshift-image-registry.svc:5000/team-memory-dev/chroma:v2
-          imagePullPolicy: Always
+          image: chromadb/chroma:0.5.23
+          imagePullPolicy: IfNotPresent
