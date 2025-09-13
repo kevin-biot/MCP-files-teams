@@ -8,18 +8,13 @@ spec:
       containers:
         - name: chroma
           volumeMounts:
+            # Mount the ConfigMap as a directory so chromadb/log_config.yml resolves regardless of cwd
             - name: chroma-log-config
-              mountPath: /chromadb/log_config.yml
-              subPath: log_config.yml
+              mountPath: /app/chromadb
+              readOnly: true
             - name: chroma-log-config
-              mountPath: /usr/local/lib/python3.11/site-packages/chromadb/log_config.yml
-              subPath: log_config.yml
-            - name: chroma-log-config
-              mountPath: /usr/lib/python3.11/site-packages/chromadb/log_config.yml
-              subPath: log_config.yml
-            - name: chroma-log-config
-              mountPath: /usr/local/lib/python3.11/dist-packages/chromadb/log_config.yml
-              subPath: log_config.yml
+              mountPath: /chromadb
+              readOnly: true
       volumes:
         - name: chroma-log-config
           configMap:
