@@ -8,10 +8,6 @@ spec:
         elements:
           - env: dev
             namespace: team-memory-dev
-          - env: staging
-            namespace: team-memory-staging
-          - env: prod
-            namespace: team-memory
   template:
     metadata:
       name: mcp-{{env}}
