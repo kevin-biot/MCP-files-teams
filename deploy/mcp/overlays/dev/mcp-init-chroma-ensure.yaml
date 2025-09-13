@@ -19,9 +19,14 @@ spec:
                 if [ "$code" = "200" ]; then echo "Chroma heartbeat OK"; break; fi
                 echo "Heartbeat code=$code; retry $i"; sleep 2
               done
-              echo "Ensuring collection exists via v2: $URL/api/v2/collections"
-              code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"name":"llm_conversation_memory"}' "$URL/api/v2/collections" || true)
-              if [ "$code" = "201" ] || [ "$code" = "409" ]; then echo "Collection ensured (code=$code)"; exit 0; fi
+              echo "Ensuring tenant/database defaults exist"
+              tcode=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"name":"default"}' "$URL/api/v2/tenants" || true)
+              echo "Tenant ensure code=$tcode"
+              dcode=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"name":"default"}' "$URL/api/v2/tenants/default/databases" || true)
+              echo "Database ensure code=$dcode"
+              echo "Ensuring collection via v2 tenant/db: $URL/api/v2/tenants/default/databases/default/collections"
+              code=$(curl -s -o /dev/null -w '%{http_code}' -H 'Content-Type: application/json' -d '{"name":"llm_conversation_memory"}' "$URL/api/v2/tenants/default/databases/default/collections" || true)
+              if [ "$code" = "200" ] || [ "$code" = "201" ] || [ "$code" = "409" ]; then echo "Collection ensured (code=$code)"; exit 0; fi
               echo "Collection ensure returned code=$code (continuing)"
               exit 0
           # No env needed; script defaults to CHROMA_URL or http://chroma-svc:8000
